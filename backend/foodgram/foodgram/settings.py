@@ -122,6 +122,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_ROOT = 'media/'
+MEDIA_URL = 'media/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
@@ -140,8 +143,9 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
-        'user': 'users.serializers.SpecialUserSerializer',
-        'current_user': 'users.serializers.SpecialUserSerializer',
+        'user': 'recipes.serializers.CustomUserSerializer',
+        'current_user': 'recipes.serializers.CustomUserSerializer',
     },
 }
