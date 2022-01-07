@@ -4,3 +4,4 @@ djangorestframework==3.13.1
 Markdown==3.3.6
 djoser==2.1.0
 gunicorn==20.1.0
+Pillow==8.4.0
