@@ -4,12 +4,10 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     UserViewSet,
-    GroupViewSet,
 )
 
 router = DefaultRouter()
-router.register('users', UserViewSet, basename='User')
-router.register(r'groups', GroupViewSet)
+
 
 urlpatterns = [
     #path('', include(router.urls)),
