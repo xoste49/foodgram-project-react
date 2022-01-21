@@ -22,35 +22,32 @@ jobs:
         pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
         pip install -r requirements.txt 
         
-    - name: Test with flake8 and django tests
+    - name: Test with flake8 test
       run: |
         python -m flake8
-        #python -m pytest
-  deploy:
+  build_and_push_to_docker_hub:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     needs: tests
-    if: github.ref == 'refs/heads/master'
     steps:
-    - name: executing remote ssh commands to deploy
-      uses: appleboy/ssh-action@master
+    - name: Check out the repo
+      uses: actions/checkout@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Login to Docker
+      uses: docker/login-action@v1
       with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          gh repo clone xoste49/foodgram-project-react
-          cd foodgram-project-react/infra/
-          sudo docker-compose stop
-          sudo docker-compose rm web
-          touch release.env
-          #echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
-          #echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-          #echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
-          #echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
-          #echo DB_HOST=${{ secrets.DB_HOST }} >> .env
-          #echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-          #sudo docker-compose up -d 
-          #sudo docker-compose exec web python manage.py collectstatic
-          #sudo docker-compose exec web python manage.py makemigrations
-          #sudo docker-compose exec web python manage.py migrate
-          #sudo docker-compose restart
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Push frotend to Docker Hub
+      uses: docker/build-push-action@v2
+      with:
+        file: ./frontend/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
+    - name: Push backend to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
