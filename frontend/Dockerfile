@@ -1,5 +1,5 @@
 # build env
-FROM node:13.12.0-alpine as build
+FROM node:13.12.0-stretch-slim as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
