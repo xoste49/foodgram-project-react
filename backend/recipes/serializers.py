@@ -1,17 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import F, Sum
-from djoser.serializers import UserSerializer, UserCreateSerializer
+from djoser.conf import settings
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from djoser.conf import settings
 from rest_framework.fields import SerializerMethodField
 
-from .models import (
-    Recipe,
-    Tag, Ingredient, Subscription, Favorite, RecipeIngredient, CustomUser,
-    ShoppingCart
-)
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Subscription, Tag)
 
 User = get_user_model()
 
@@ -23,9 +19,8 @@ class CustomUserSerializer(UserSerializer):
         user = self.context['request'].user
         author_id = instance.id
         try:
-            return user.is_authenticated and \
-                   Subscription.objects.filter(
-                       user=user, author__id=author_id).exists()
+            return user.is_authenticated and Subscription.objects.filter(
+                user=user, author__id=author_id).exists()
         except Exception:
             return False
 

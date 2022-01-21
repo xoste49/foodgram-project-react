@@ -2,8 +2,8 @@ from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 
-from .models import Tag, Recipe, RecipeIngredient, Ingredient, Subscription, \
-    CustomUser, Favorite, ShoppingCart
+from .models import (CustomUser, Favorite, Ingredient, Recipe,
+                     RecipeIngredient, ShoppingCart, Subscription, Tag)
 
 
 @admin.register(CustomUser)
@@ -28,8 +28,9 @@ class TagAdmin(admin.ModelAdmin):
 
 
 class IngredientResource(resources.ModelResource):
-   class Meta:
-      model = Ingredient
+    class Meta:
+        model = Ingredient
+
 
 @admin.register(Ingredient)
 class IngredientAdmin(ImportExportModelAdmin):

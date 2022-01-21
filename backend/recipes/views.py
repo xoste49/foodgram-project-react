@@ -1,23 +1,23 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Sum, F
+from django.db.models import F, Sum
 from django.http import HttpResponse
-from django.views.generic import detail
 from djoser.conf import settings
 from djoser.views import UserViewSet
-from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Recipe, Tag, Ingredient, Favorite, Subscription, \
-    RecipeIngredient, ShoppingCart
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Subscription, Tag)
 from .pagination import LimitPagination
-from .serializers import RecipeSerializer, TagSerializer, IngredientSerializer, \
-    SubscriptionSerializer, FavoriteSerializer, SubscribeSerializer, \
-    CustomUserSerializer, RecipeCreateUploadSerializer, \
-    RecipeMinifiedSerializer, ShoppingCartSerializer
+from .serializers import (CustomUserSerializer, FavoriteSerializer,
+                          IngredientSerializer, RecipeCreateUploadSerializer,
+                          RecipeMinifiedSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, SubscribeSerializer,
+                          TagSerializer)
 
 User = get_user_model()
 
@@ -30,8 +30,9 @@ class CustomUserViewSet(UserViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = self.queryset
-        if settings.HIDE_USERS and self.action == "list" and not user.is_staff and not user.is_anonymous:
-            queryset = queryset.filter(pk=user.pk)
+        if settings.HIDE_USERS and self.action == "list" and (
+                not user.is_staff and not user.is_anonymous):
+            return queryset.filter(pk=user.pk)
         return queryset
 
     @action(detail=True, methods=['post', 'delete'],
@@ -156,7 +157,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['post', 'delete'], detail=True)
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        obj = ShoppingCart.objects.filter(user=self.request.user, recipe=recipe)
+        obj = ShoppingCart.objects.filter(user=self.request.user,
+                                          recipe=recipe)
         if self.request.method == 'POST':
             serializer = ShoppingCartSerializer(data=request.data)
             if obj.exists():
@@ -183,8 +185,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         items = RecipeIngredient.objects.select_related('recipe', 'ingredient')
         items = items.filter(recipe__shopping_carts__user=request.user)
-        items = items.values('ingredient__name',
-                             'ingredient__measurement_unit').annotate(
+        items = items.values(
+            'ingredient__name',
+            'ingredient__measurement_unit').annotate(
             name=F('ingredient__name'),
             units=F('ingredient__measurement_unit'),
             total=Sum('amount')).order_by('-total')
@@ -221,29 +224,3 @@ class IngredientViewSet(viewsets.ModelViewSet):
         if name:
             queryset = queryset.filter(name__istartswith=name)
         return queryset.all()
-
-
-class FavoriteViewSet(viewsets.ModelViewSet):
-    serializer_class = FavoriteSerializer
-    pagination_class = None
-    permission_classes = [IsAuthenticated]
-
-    http_method_names = ['post', 'delete']
-
-    def get_queryset(self):
-        return Favorite.objects.all()
-
-    def perform_create(self, serializer):
-        recipe = get_object_or_404(Recipe, id=self.kwargs.get('recipe_id'))
-        if Favorite.objects.filter(user=self.request.user,
-                                   recipe=recipe).exists():
-            raise ValidationError(
-                {'errors': 'Рецепт уже есть в избранном'},
-                status.HTTP_400_BAD_REQUEST
-            )
-        if serializer.is_valid():
-            print('Рецепт успешно добавлен в избранное')
-            serializer.save(user=self.request.user, recipe=recipe)
-            return Response('Ничего не возвращаю',
-                            status=status.HTTP_201_CREATED)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
