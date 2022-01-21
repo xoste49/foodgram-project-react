@@ -132,3 +132,4 @@ dmypy.json
 .idea
 /backend/foodgram/media/
 /backend/static_backend/
+/backend/users/
