@@ -104,7 +104,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField('get_image_url')
     # is_favorited = SerializerMethodField(method_name='is_favorited_method')
     is_favorited = serializers.BooleanField()
-    # is_in_shopping_cart = SerializerMethodField(method_name='is_in_shopping_cart')
+    # is_in_shopping_cart = SerializerMethodField(
+    #                           method_name='is_in_shopping_cart')
     is_in_shopping_cart = serializers.BooleanField()
 
     def get_ingredients(self, instance):
