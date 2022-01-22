@@ -15,6 +15,10 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
     USERNAME_FIELD = 'email'
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
 
 User = get_user_model()
 
@@ -40,6 +44,10 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+
 
 class Ingredient(models.Model):
     name = models.CharField(
@@ -53,6 +61,10 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
 
 
 class RecipeQuerySet(models.QuerySet):
@@ -155,8 +167,8 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        verbose_name = "Подписка"
-        verbose_name_plural = "Подписки"
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
         unique_together = [['user', 'author']]
 
 
@@ -174,6 +186,8 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранные'
         unique_together = [['user', 'recipe']]
 
 
@@ -192,4 +206,6 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
         unique_together = [['user', 'recipe']]
