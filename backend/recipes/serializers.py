@@ -5,6 +5,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
+from rest_framework.validators import UniqueTogetherValidator
 
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
@@ -102,10 +103,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
     image = serializers.SerializerMethodField('get_image_url')
-    # is_favorited = SerializerMethodField(method_name='is_favorited_method')
     is_favorited = serializers.BooleanField()
-    # is_in_shopping_cart = SerializerMethodField(
-    #                           method_name='is_in_shopping_cart')
     is_in_shopping_cart = serializers.BooleanField()
 
     def get_ingredients(self, instance):
@@ -113,24 +111,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             RecipeIngredient.objects.filter(recipe=instance).all(),
             many=True
         ).data
-
-    """def is_favorited_method(self, instance):
-        user = self.context['request'].user
-        recipe_id = instance.id
-        try:
-            return Favorite.objects.filter(user=user,
-                                           recipe__id=recipe_id).exists()
-        except Exception:
-            return False
-
-    def is_in_shopping_cart(self, instance):
-        user = self.context['request'].user
-        recipe_id = instance.id
-        try:
-            return ShoppingCart.objects.filter(user=user,
-                                           recipe__id=recipe_id).exists()
-        except Exception:
-            return False"""
 
     @staticmethod
     def get_image_url(obj):
@@ -158,7 +138,6 @@ class RecipeCreateUploadSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        print('ingredients', ingredients)
         create_ingredients = [
             RecipeIngredient(
                 recipe=recipe,
@@ -208,6 +187,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
         fields = ('user', 'author')
         model = Subscription
         read_only_fields = ('user', 'author')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('user', 'author')
+            )
+        ]
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -225,10 +210,15 @@ class FavoriteSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        # fields = ('id', 'name', 'image', 'cooking_time')
         fields = '__all__'
         model = Favorite
         read_only_fields = ('user', 'recipe')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe')
+            )
+        ]
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -236,3 +226,9 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = ShoppingCart
         read_only_fields = ('user', 'recipe')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('user', 'recipe')
+            )
+        ]
