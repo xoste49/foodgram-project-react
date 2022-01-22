@@ -46,10 +46,41 @@ jobs:
         context: ./backend
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
-    - name: Push frontend to Docker Hub
-      uses: docker/build-push-action@v2
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push_to_docker_hub
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: executing remote ssh commands to deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd foodgram-project-react/infra/
+            sudo docker-compose stop
+            sudo docker-compose rm web
+            touch .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            echo SQL_ENGINE=${{ secrets.SQL_ENGINE }} >> .env
+            echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env
+            echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+            echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo SQL_HOST=${{ secrets.SQL_HOST }} >> .env
+            echo SQL_PORT=${{ secrets.SQL_PORT }} >> .env
+            sudo docker-compose up -d 
+            sudo docker-compose exec web python manage.py collectstatic --noinput
+            sudo docker-compose exec web python manage.py makemigrations
+            sudo docker-compose exec web python manage.py migrate
+            sudo docker-compose restart
+  send_message:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: send message
+      uses: appleboy/telegram-action@master
       with:
-        file: ./frontend/Dockerfile
-        context: ./frontend
-        push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: ${{ github.workflow }} успешно выполнен!
