@@ -6,9 +6,11 @@ from django.utils.datetime_safe import date
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)
-    first_name = models.CharField('first name', max_length=150, blank=False)
-    last_name = models.CharField('last name', max_length=150, blank=False)
+    email = models.EmailField(verbose_name='Почта', unique=True)
+    first_name = models.CharField(
+        verbose_name='Имя', max_length=150, blank=False)
+    last_name = models.CharField(
+        verbose_name='Фамилия', max_length=150, blank=False)
 
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
     USERNAME_FIELD = 'email'
@@ -80,12 +82,12 @@ class Recipe(models.Model):
         verbose_name='Автор',
     )
     name = models.CharField(
-        verbose_name='Название рецепта',
+        verbose_name='Название',
         max_length=200,
     )
-    image = models.ImageField(upload_to='images/')
+    image = models.ImageField(verbose_name='Изображение', upload_to='images/')
     text = models.TextField(
-        verbose_name='Описание рецепта',
+        verbose_name='Описание',
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -98,7 +100,7 @@ class Recipe(models.Model):
         verbose_name='Теги',
     )
     cooking_time = models.PositiveIntegerField(
-        verbose_name='Время приготовления (в минутах).',
+        verbose_name='Время приготовления (в минутах)',
     )
     pub_date = models.DateField(default=date.today,
                                 verbose_name='Дата публикации',
@@ -117,14 +119,15 @@ class Recipe(models.Model):
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE
+        Recipe, on_delete=models.CASCADE, verbose_name='Рецепт',
     )
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE
+        Ingredient, on_delete=models.CASCADE, verbose_name='Ингредиент',
     )
     amount = models.DecimalField(
         max_digits=10,
-        decimal_places=1
+        decimal_places=1,
+        verbose_name='Кол-во',
     )
 
     class Meta:
@@ -162,10 +165,12 @@ class Favorite(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="favorite",
+        verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт',
     )
 
     class Meta:
@@ -177,11 +182,13 @@ class ShoppingCart(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="shopping_carts",
+        verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         related_name="shopping_carts",
+        verbose_name='Рецепт',
     )
 
     class Meta:
