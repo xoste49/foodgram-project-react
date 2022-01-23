@@ -1,5 +1,8 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Exists, OuterRef
 from django.utils.datetime_safe import date
@@ -140,6 +143,7 @@ class RecipeIngredient(models.Model):
         max_digits=10,
         decimal_places=1,
         verbose_name='Кол-во',
+        validators=[MinValueValidator(Decimal('0.1'))],
     )
 
     class Meta:
@@ -195,7 +199,7 @@ class Favorite(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_user_recipe'
+                name='unique_favorite_user_recipe'
             )
         ]
 
@@ -220,6 +224,6 @@ class ShoppingCart(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_user_recipe'
+                name='unique_shoppingCart_user_recipe'
             )
         ]

@@ -4,8 +4,9 @@ from djoser.conf import settings
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
@@ -83,9 +84,22 @@ class IngredientsCreateInRecipeSerializer(serializers.ModelSerializer):
                                             queryset=Ingredient.objects.all())
     amount = serializers.IntegerField(write_only=True)
 
+    def validate_amount(self, value):
+        if value < 0:
+            raise ValidationError(
+                'Количество ингредиента не может отрицательным')
+        return value
+
     class Meta:
         fields = ('recipe', 'id', 'amount')
         model = RecipeIngredient
+        validators = [
+            UniqueTogetherValidator(
+                queryset=RecipeIngredient.objects.all(),
+                fields=['recipe', 'id'],
+                message='Ингредиенты дублируются!'
+            )
+        ]
 
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
@@ -125,46 +139,50 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
 
 
-class RecipeCreateUploadSerializer(serializers.ModelSerializer):
-    author = CustomUserSerializer(read_only=True, required=False)
-    ingredients = IngredientsCreateInRecipeSerializer(many=True)
-    tags = serializers.PrimaryKeyRelatedField(many=True,
-                                              queryset=Tag.objects.all())
-    image = Base64ImageField()
-
-    @transaction.atomic
-    def create(self, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
+def create_update_recipe(validated_data, instance=None):
+    ingredients = validated_data.pop('ingredients', None)
+    tags = validated_data.pop('tags', None)
+    if instance is None:
+        instance = Recipe.objects.create(**validated_data)
+    if tags is not None:
+        instance.tags.set(tags)
+    if ingredients is not None:
+        instance.ingredients.clear()
         create_ingredients = [
             RecipeIngredient(
-                recipe=recipe,
+                recipe=instance,
                 ingredient=ingredient['ingredient'],
                 amount=ingredient['amount']
             ) for ingredient in ingredients
         ]
         RecipeIngredient.objects.bulk_create(create_ingredients)
-        return recipe
+    return instance
+
+
+class RecipeCreateUploadSerializer(serializers.ModelSerializer):
+    author = CustomUserSerializer(read_only=True, required=False)
+    ingredients = IngredientsCreateInRecipeSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all(),
+        validators=[UniqueValidator(queryset=Tag.objects.all())])
+    image = Base64ImageField()
+
+    def validate_cooking_time(self, value):
+        if value < 0:
+            raise ValidationError('Значение не может быть меньше нуля')
+        return value
+
+    @transaction.atomic
+    def create(self, validated_data):
+        return create_update_recipe(validated_data)
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop('ingredients', None)
-        tags = validated_data.pop('tags', None)
-        if tags is not None:
-            instance.tags.set(tags)
-        if ingredients is not None:
-            instance.ingredients.clear()
-            create_ingredients = [
-                RecipeIngredient(
-                    recipe=instance,
-                    ingredients=ingredient['ingredient'],
-                    amount=ingredient['amount']
-                ) for ingredient in ingredients
-            ]
-            RecipeIngredient.objects.bulk_create(create_ingredients)
-        return super().update(instance, validated_data)
+        return super().update(
+            create_update_recipe(
+                validated_data, instance
+            ), validated_data)
 
     def to_representation(self, instance):
         self.fields.pop('ingredients')
