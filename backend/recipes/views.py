@@ -42,26 +42,19 @@ class CustomUserViewSet(UserViewSet):
         user = get_object_or_404(User, id=id)
         if self.request.method == 'POST':
             if self.request.user == user:
-                print('Вы пытаетесь подписаться на себя')
                 raise ValidationError(
                     {'errors': 'Вы пытаетесь подписаться на себя'},
                     status.HTTP_400_BAD_REQUEST
                 )
             if Subscription.objects.filter(user=self.request.user,
                                            author=user).exists():
-                print('Вы уже подписаны на пользователя')
                 raise ValidationError(
                     {'errors': 'Вы уже подписаны на пользователя'},
                     status.HTTP_400_BAD_REQUEST
                 )
             if serializer.is_valid():
-                print('Подписка успешно создана')
-                print(CustomUserSerializer(user))
-                print('self.request', self.request.data)
-                print('serializer', serializer)
-                serializer2 = self.get_serializer(user, many=False)
                 serializer.save(user=self.request.user, author=user)
-                return Response(serializer2.data)
+                return Response(self.get_serializer(user, many=False).data)
         if self.request.method == 'DELETE':
             obj = Subscription.objects.filter(user=self.request.user,
                                               author=user)
