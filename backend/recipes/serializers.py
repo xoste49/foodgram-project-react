@@ -82,7 +82,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientsCreateInRecipeSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(read_only=True)
     id = serializers.PrimaryKeyRelatedField(source='ingredient',
-                                            queryset=Ingredient.objects.all())
+                                            queryset=Ingredient.objects.all()
+                                            )
     amount = serializers.IntegerField(write_only=True)
 
     def validate_amount(self, value):
@@ -94,13 +95,6 @@ class IngredientsCreateInRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('recipe', 'id', 'amount')
         model = RecipeIngredient
-        validators = [
-            UniqueTogetherValidator(
-                queryset=RecipeIngredient.objects.all(),
-                fields=['recipe', 'id'],
-                message='Ингредиенты дублируются!'
-            )
-        ]
 
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
@@ -153,6 +147,20 @@ class RecipeCreateUploadSerializer(serializers.ModelSerializer):
         if value < 0:
             raise ValidationError('Значение не может быть меньше нуля')
         return value
+
+    def validate_ingredients(self, ingredients):
+        len_ingredients = len(ingredients)
+        len_unique_ingredients = len(
+            set([ingredient.get('ingredient') for ingredient in ingredients])
+        )
+        if len_ingredients != len_unique_ingredients:
+            raise ValidationError('Ингредиенты не должны повторяться.')
+        return ingredients
+
+    def validate_tags(self, tags):
+        if len(tags) != len(set(tags)):
+            raise ValidationError('Теги должны быть уникальны')
+        return tags
 
     @transaction.atomic
     def create(self, validated_data):
