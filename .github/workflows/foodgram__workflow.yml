@@ -66,6 +66,7 @@ jobs:
             sudo docker-compose stop
             sudo docker-compose rm -f web
             sudo docker-compose pull
+            rm .env
             touch .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
             echo SQL_ENGINE=${{ secrets.SQL_ENGINE }} >> .env
@@ -74,6 +75,7 @@ jobs:
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             echo SQL_HOST=${{ secrets.SQL_HOST }} >> .env
             echo SQL_PORT=${{ secrets.SQL_PORT }} >> .env
+            echo "STATIC_URL=static/django/" >> .env
             sudo docker-compose up -d 
             sudo docker-compose exec -T web python manage.py collectstatic --noinput
             sudo docker-compose exec -T web python manage.py makemigrations
