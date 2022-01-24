@@ -44,12 +44,12 @@ class Tag(models.Model):
         unique=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -62,12 +62,12 @@ class Ingredient(models.Model):
         max_length=200,
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeQuerySet(models.QuerySet):
@@ -149,6 +149,12 @@ class RecipeIngredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredient'
+            )
+        ]
 
 
 class Subscription(models.Model):
