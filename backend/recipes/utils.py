@@ -1,4 +1,4 @@
-from backend.recipes.models import Recipe, RecipeIngredient
+from .models import Recipe, RecipeIngredient
 
 
 def create_update_recipe(validated_data, instance=None):
