@@ -133,3 +133,4 @@ dmypy.json
 /backend/foodgram/media/
 /backend/static_backend/
 /backend/users/
+/infra/dev.env
