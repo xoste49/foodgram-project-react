@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
@@ -10,6 +11,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from .filters import RecipeFilterBackend
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
 from .pagination import LimitPagination
@@ -70,7 +72,7 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
         queryset = User.objects.filter(
-            subscriber__user=self.request.user).all()
+            subscriber__user=self.request.user)
         context = self.get_serializer_context()
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer_class()(
@@ -83,6 +85,7 @@ class CustomUserViewSet(UserViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = LimitPagination
+    filter_backends = [RecipeFilterBackend]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -108,16 +111,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Recipe.objects
         queryset = queryset.add_user_annotations(user.id)
-        tags = self.request.query_params.getlist('tags')
-        author = self.request.query_params.get('author')
-        if self.request.query_params.get('is_favorited'):
-            queryset = queryset.filter(is_favorited=True)
-        if self.request.query_params.get('is_in_shopping_cart'):
-            queryset = queryset.filter(is_in_shopping_cart=True)
-        if len(tags) != 0:
-            queryset = queryset.filter(tags__slug__in=tags)
-        if author is not None:
-            queryset = queryset.filter(author__id=author)
         return queryset.order_by('-pub_date').all()
 
     @action(detail=True, methods=['post', 'delete'])
