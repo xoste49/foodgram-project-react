@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'import_export',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -112,7 +113,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 STATIC_ROOT = 'static_backend/'
-STATIC_URL = 'static/django/'
+STATIC_URL = os.environ.get("STATIC_URL", default='static_backend/')
 
 MEDIA_ROOT = 'media/'
 MEDIA_URL = 'media/'
