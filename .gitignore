@@ -134,3 +134,4 @@ dmypy.json
 /backend/static_backend/
 /backend/users/
 /infra/dev.env
+/backend/media/
