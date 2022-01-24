@@ -47,7 +47,7 @@ jobs:
       with:
         file: ./backend/Dockerfile
         context: ./backend
-        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        platforms: linux/amd64,linux/arm64,linux/arm/v7l
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
   deploy:
