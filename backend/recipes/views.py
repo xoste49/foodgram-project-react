@@ -1,18 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http import HttpResponse
-from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .filters import RecipeFilterBackend, IngredientSearchFilter
+from .filters import IngredientSearchFilter, RecipeFilterBackend
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
 from .pagination import LimitPagination
@@ -119,7 +117,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.action in 'shopping_cart':
             serializer = ShoppingCartSerializer(data=request.data)
             obj = ShoppingCart.objects.filter(user=self.request.user,
-                                          recipe=recipe)
+                                              recipe=recipe)
         elif self.action in 'favorite':
             serializer = FavoriteSerializer(data=request.data)
             obj = Favorite.objects.filter(
