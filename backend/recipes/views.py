@@ -7,11 +7,12 @@ from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .filters import RecipeFilterBackend
+from .filters import RecipeFilterBackend, IngredientSearchFilter
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
 from .pagination import LimitPagination
@@ -197,16 +198,11 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
     permission_classes = [AllowAny]
+    filter_backends = [IngredientSearchFilter]
     search_fields = ['name']
 
     http_method_names = ['get']
-
-    def get_queryset(self):
-        queryset = Ingredient.objects
-        name = self.request.query_params.get('name')
-        if name:
-            queryset = queryset.filter(name__istartswith=name)
-        return queryset.all()
