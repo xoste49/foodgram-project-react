@@ -65,6 +65,7 @@ jobs:
             cd foodgram-project-react/infra/
             sudo docker-compose stop
             sudo docker-compose rm -f web
+            sudo docker-compose pull
             touch .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
             echo SQL_ENGINE=${{ secrets.SQL_ENGINE }} >> .env
