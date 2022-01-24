@@ -66,8 +66,8 @@ class Ingredient(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Рецепт'
-        verbose_name_plural = 'Рецепты'
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
 
 class RecipeQuerySet(models.QuerySet):
