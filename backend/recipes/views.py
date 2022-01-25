@@ -14,8 +14,9 @@ from .filters import IngredientSearchFilter, RecipeFilterBackend
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
 from .pagination import LimitPagination
-from .serializers import (CustomUserSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeCreateUploadSerializer,
+from .serializers import (CustomUserSerializer, ExtendedCustomUserSerializer,
+                          FavoriteSerializer, IngredientSerializer,
+                          RecipeCreateUploadSerializer,
                           RecipeMinifiedSerializer, RecipeSerializer,
                           ShoppingCartSerializer, SubscribeSerializer,
                           TagSerializer)
@@ -74,7 +75,7 @@ class CustomUserViewSet(UserViewSet):
             subscriber__user=self.request.user)
         context = self.get_serializer_context()
         page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer_class()(
+        serializer = ExtendedCustomUserSerializer(
             page,
             context=context,
             many=True
@@ -114,8 +115,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def shopping_cart_and_favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        print('self.action', self.action)
-        print('self.request.method', self.request.method)
         if self.action in 'shopping_cart':
             serializer = ShoppingCartSerializer(data=request.data)
             obj = ShoppingCart.objects.filter(user=self.request.user,
@@ -130,9 +129,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     {'errors': 'Рецепт уже есть в списке покупок'},
                     status.HTTP_400_BAD_REQUEST
                 )
-            print('Метод POST перед валидацией')
             if serializer.is_valid():
-                print('Метод POST после валидацией')
                 serializer.save(user=self.request.user, recipe=recipe)
                 return Response(RecipeMinifiedSerializer(recipe).data,
                                 status=status.HTTP_201_CREATED)

@@ -58,6 +58,35 @@ class RecipeMinifiedSerializer(serializers.ModelSerializer):
         model = Recipe
 
 
+class ExtendedCustomUserSerializer(CustomUserSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    def get_recipes(self, instance):
+        recipes_limit = self.context.get('recipes_limit', 6)
+        recipes = instance.recipes.all()[:recipes_limit]
+        return RecipeMinifiedSerializer(
+            recipes, many=True, context=self.context
+        ).data
+
+    def get_recipes_count(self, instance):
+        return instance.recipes.count()
+
+    class Meta:
+        model = User
+        fields = [
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_limit',
+        ]
+        read_only_fields = (settings.LOGIN_FIELD,)
+
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
