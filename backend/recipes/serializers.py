@@ -6,7 +6,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from rest_framework.validators import UniqueValidator
 
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
@@ -194,12 +194,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
         fields = ('user', 'author')
         model = Subscription
         read_only_fields = ('user', 'author')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=('user', 'author')
-            )
-        ]
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -220,12 +214,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Favorite
         read_only_fields = ('user', 'recipe')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Favorite.objects.all(),
-                fields=('user', 'recipe')
-            )
-        ]
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -233,9 +221,3 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = ShoppingCart
         read_only_fields = ('user', 'recipe')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=ShoppingCart.objects.all(),
-                fields=('user', 'recipe')
-            )
-        ]
