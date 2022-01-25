@@ -63,7 +63,7 @@ class ExtendedCustomUserSerializer(CustomUserSerializer):
     recipes_count = serializers.SerializerMethodField()
 
     def get_recipes(self, instance):
-        recipes_limit = self.context.get('recipes_limit', 6)
+        recipes_limit = self.context.get('recipes_limit', 2)
         recipes = instance.recipes.all()[:recipes_limit]
         return RecipeMinifiedSerializer(
             recipes, many=True, context=self.context
@@ -82,7 +82,7 @@ class ExtendedCustomUserSerializer(CustomUserSerializer):
             'last_name',
             'is_subscribed',
             'recipes',
-            'recipes_limit',
+            'recipes_count',
         ]
         read_only_fields = (settings.LOGIN_FIELD,)
 
