@@ -122,8 +122,9 @@ DJOSER = {
         'current_user': 'recipes.serializers.CustomUserSerializer',
         'user_create': 'recipes.serializers.CustomUserCreateSerializer',
     },
+    'HIDE_USERS': False,
     'PERMISSIONS': {
-        'user': ["djoser.permissions.CurrentUserOrAdmin"],
+        'user': ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
         'user_list': ["rest_framework.permissions.AllowAny"],
     }
 }
